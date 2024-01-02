@@ -88,7 +88,6 @@ export const handleGerarCartoes = (
         rodadaConcluida = true;
       } else {
         console.log(`Rodada ${rodada} incompleta, reiniciando...`);
-        rodadaConcluida = false; // Definir como falso para reiniciar a rodada
         break;
       }
     }
