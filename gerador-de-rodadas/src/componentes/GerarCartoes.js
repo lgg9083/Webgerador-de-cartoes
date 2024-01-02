@@ -1,87 +1,197 @@
-const shuffleArray = (array) => {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-  };
-  
-  const handleGerarCartoes = (
-    numeroParticipantes,
-    tempoMaximoEventoHoras,
-    tempoPorRodadaHoras,
-    numeroMaximoPorMesa
-  ) => {
-    const rodadasPossiveis = Math.floor(
-      tempoMaximoEventoHoras / tempoPorRodadaHoras
-    );
-    const mesas = Math.ceil(numeroParticipantes / numeroMaximoPorMesa);
-    const encontrosArray = []; // Array para armazenar todos os encontros por rodada
-    const participantes = Array.from(
-      { length: numeroParticipantes },
-      (_, index) => index + 1
-    );
-    console.log("Distribuição de Participantes:");
-    const encontrosRegistrados = new Set(); // Set para rastrear os encontros já registrados
-  
-    const shuffleParticipants = shuffleArray(participantes);
-  
-    for (let i = 1; i <= rodadasPossiveis; i++) {
-      const encontrosRodada = []; // Array para armazenar os encontros da rodada atual
-      const participantesRestantes = shuffleArray([...shuffleParticipants]); // Embaralhar a ordem dos participantes para cada rodada
-      console.log(`Rodada ${i}:`);
-  
-      for (let j = 1; j <= mesas && participantesRestantes.length > 0; j++) {
-        const participantesNaMesa = [];
-        const encontradosNaMesa = new Set();
-  
-        for (let k = 0; k < numeroMaximoPorMesa && participantesRestantes.length > 0; k++) {
-          const participanteAtual = participantesRestantes.shift();
-          let encontrado = false;
-  
-          for (const outroParticipante of shuffleParticipants) {
-            const encontro1 = `${participanteAtual}-${outroParticipante}`;
-            const encontro2 = `${outroParticipante}-${participanteAtual}`;
-  
-            if (
-              participanteAtual !== outroParticipante &&
-              !encontrosRegistrados.has(encontro1) &&
-              !encontrosRegistrados.has(encontro2) &&
-              !encontradosNaMesa.has(outroParticipante)
-            ) {
-              participantesNaMesa.push(participanteAtual);
-              encontrosRegistrados.add(encontro1);
-              encontrosRegistrados.add(encontro2);
-              encontradosNaMesa.add(outroParticipante);
-              encontrado = true;
-              break;
-            }
-          }
-  
-          if (!encontrado) {
-            participantesRestantes.push(participanteAtual); // Devolve o participante para tentar na próxima mesa
+import React, { useState } from "react";
+
+export const handleGerarCartoes = (
+  numeroParticipantes,
+  tempoMaximoEventoHoras,
+  tempoPorRodadaHoras,
+  numeroMaximoPorMesa
+) => {
+  const rodadasPossiveis = Math.floor(tempoMaximoEventoHoras / tempoPorRodadaHoras);
+  const participantes = Array.from({ length: numeroParticipantes }, (_, index) => index + 1);
+  const cartoesPorParticipante = {};
+  const mesasDisponiveis = Array.from(
+    { length: Math.ceil(numeroParticipantes / numeroMaximoPorMesa) },
+    (_, index) => index + 1
+  );
+  const confrontosAnteriores = {};
+
+  participantes.forEach((participante) => {
+    cartoesPorParticipante[participante] = [];
+  });
+
+  for (let rodada = 1; rodada <= rodadasPossiveis; rodada++) {
+    const confrontosRodada = [];
+    const confrontosPorParticipante = {};
+    participantes.forEach((participante) => {
+      confrontosPorParticipante[participante] = [];
+    });
+
+    let participantesDisponiveis = [...participantes];
+
+    let mesas = mesasDisponiveis.sort(() => Math.random() - 0.5);
+
+    while (participantesDisponiveis.length > 0) {
+      let tentativas = 0;
+
+      while (participantesDisponiveis.length > 1 && tentativas < participantesDisponiveis.length) {
+        const participanteA = participantesDisponiveis.shift();
+        console.log(`Rodada ${rodada} - Escolhendo para o participante A: ${participanteA}`);
+
+        const grupo = [participanteA];
+
+        while (grupo.length < numeroMaximoPorMesa && participantesDisponiveis.length > 0) {
+          const possiveisConfrontos = participantesDisponiveis.filter(
+            (p) =>
+              !confrontosPorParticipante[participanteA].includes(p) &&
+              !confrontosPorParticipante[p].includes(participanteA) &&
+              (!confrontosAnteriores[participanteA] ||
+                !confrontosAnteriores[participanteA].has(p))
+          );
+
+          console.log(
+            `Rodada ${rodada} - Possíveis confrontos para ${participanteA}:`,
+            possiveisConfrontos
+          );
+
+          if (possiveisConfrontos.length > 0) {
+            const indiceConfronto = Math.floor(Math.random() * possiveisConfrontos.length);
+            const confronto = possiveisConfrontos[indiceConfronto];
+            grupo.push(confronto);
+            participantesDisponiveis = participantesDisponiveis.filter((p) => p !== confronto);
+
+            confrontosAnteriores[participanteA] = confrontosAnteriores[participanteA] || new Set();
+            confrontosAnteriores[participanteA].add(confronto);
+            confrontosAnteriores[confronto] = confrontosAnteriores[confronto] || new Set();
+            confrontosAnteriores[confronto].add(participanteA);
+
+            confrontosPorParticipante[participanteA].push(confronto);
+            confrontosPorParticipante[confronto].push(participanteA);
+          } else {
             break;
           }
         }
-  
-        console.log(`Mesa ${j}:`, participantesNaMesa);
-        encontrosRodada.push(participantesNaMesa);
+
+        if (grupo.length > 1) {
+          const mesaAtual = mesas[0] || mesas[Math.floor(Math.random() * mesas.length)];
+          confrontosRodada.push(`Mesa ${mesaAtual}: ${grupo.join(", ")}`);
+          grupo.forEach((participante) => {
+            cartoesPorParticipante[participante].push({ rodada, mesa: mesaAtual });
+          });
+          mesas = mesas.filter((mesa) => mesa !== mesaAtual);
+        } else {
+          participantesDisponiveis.push(participanteA); // Reinsere o participante não alocado
+          tentativas++;
+        }
       }
-  
-      // Realoca os participantes que não tiveram todos os encontros para a próxima rodada
-      const participantesSemEncontro = participantes.filter(
-        (participante) => !encontrosRegistrados.has(`${participante}-X`)
-      );
-  
-      shuffleArray(participantesSemEncontro); // Embaralha a ordem dos participantes sem encontros
-      shuffleParticipants.push(...participantesSemEncontro.slice(0, mesas * numeroMaximoPorMesa));
-      
-      encontrosArray.push(...encontrosRodada);
+
+      if (participantesDisponiveis.length === 2) {
+        const mesaAtual = mesas[0] || mesas[Math.floor(Math.random() * mesas.length)];
+        const grupo = participantesDisponiveis;
+        confrontosRodada.push(`Mesa ${mesaAtual}: ${grupo.join(", ")}`);
+        grupo.forEach((participante) => {
+          cartoesPorParticipante[participante].push({ rodada, mesa: mesaAtual });
+        });
+        participantesDisponiveis = [];
+      }
     }
-  
-    console.log("Array de Encontros:");
-    console.log(encontrosArray);
+  }
+
+  Object.keys(cartoesPorParticipante).forEach((participante) => {
+    console.log(` ${participante}:`);
+    cartoesPorParticipante[participante].forEach((info) => {
+      console.log(`Rodada ${info.rodada}, Mesa ${info.mesa}`);
+    });
+  });
+
+  return cartoesPorParticipante;
+};
+
+const PaginaDados = () => {
+  const [numeroParticipantes, setNumeroParticipantes] = useState("");
+  const [tempoMaximoEventoHoras, setTempoMaximoEventoHoras] = useState("");
+  const [tempoPorRodadaHoras, setTempoPorRodadaHoras] = useState("");
+  const [numeroMaximoPorMesa, setNumeroMaximoPorMesa] = useState("");
+  const [cartoesGerados, setCartoesGerados] = useState([]);
+  const [mostrarPaginaCartoes, setMostrarPaginaCartoes] = useState(false);
+
+  const gerarCartoes = () => {
+    if (!numeroParticipantes || !tempoMaximoEventoHoras || !tempoPorRodadaHoras || !numeroMaximoPorMesa) {
+      alert("Por favor, preencha todos os campos.");
+      return;
+    }
+
+    const cartoes = handleGerarCartoes(
+      Number(numeroParticipantes),
+      Number(tempoMaximoEventoHoras),
+      Number(tempoPorRodadaHoras),
+      Number(numeroMaximoPorMesa)
+    );
+
+    const cartoesGerados = Object.keys(cartoes).map((participante) => ({
+      participante,
+      rodadasEMesas: cartoes[participante],
+    }));
+
+    setCartoesGerados(cartoesGerados);
+    setMostrarPaginaCartoes(true);
   };
-  
-  export default handleGerarCartoes;
-  
+
+  return (
+    <div>
+      {!mostrarPaginaCartoes ? (
+        <>
+          <h2>Insira os dados:</h2>
+          <label htmlFor="numeroParticipantes">Número de participantes:</label>
+          <input
+            id="numeroParticipantes"
+            type="number"
+            value={numeroParticipantes}
+            onChange={(e) => setNumeroParticipantes(e.target.value)}
+          />
+          <label htmlFor="tempoMaximoEvento">Tempo Máximo do Evento (horas):</label>
+          <input
+            id="tempoMaximoEvento"
+            type="number"
+            value={tempoMaximoEventoHoras}
+            onChange={(e) => setTempoMaximoEventoHoras(e.target.value)}
+          />
+          <label htmlFor="tempoPorRodada">Tempo por rodada (horas):</label>
+          <input
+            id="tempoPorRodada"
+            type="number"
+            value={tempoPorRodadaHoras}
+            onChange={(e) => setTempoPorRodadaHoras(e.target.value)}
+          />
+          <label htmlFor="numeroMaximoPorMesa">Participantes por mesa:</label>
+          <input
+            id="numeroMaximoPorMesa"
+            type="number"
+            value={numeroMaximoPorMesa}
+            onChange={(e) => setNumeroMaximoPorMesa(e.target.value)}
+          />
+          <button onClick={gerarCartoes}>Gerar Cartões</button>
+        </>
+      ) : (
+        <div>
+          <h2>Cartões Gerados:</h2>
+          <ul>
+            {cartoesGerados.map((cartao, index) => (
+              <li key={index}>
+                {cartao.participante}
+                <ul>
+                  {cartao.rodadasEMesas.map((info, i) => (
+                    <li key={i}>
+                      Rodada {info.rodada}, Mesa {info.mesa}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PaginaDados;

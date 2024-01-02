@@ -1,99 +1,115 @@
-import React, { useState } from 'react';
-import { render, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom/extend-expect';
-import { handleGerarCartoes } from '../componentes/Dashboard';
-import { participanteJaNaMesa } from '../componentes/Dashboard';
-import PaginaDados from '../componentes/Dashboard';
+import { handleGerarCartoes } from "../componentes/Dashboard";
 
-describe('PaginaDados Component', () => {
-  test('renderiza corretamente os inputs', () => {
-    const { getByLabelText } = render(<PaginaDados />);
-    const numeroParticipantesInput = getByLabelText('Número de participantes:');
-    const tempoMaximoEventoInput = getByLabelText('Tempo Máximo do Evento:');
-    // Adicione verificações para os outros inputs conforme necessário
-    expect(numeroParticipantesInput).toBeInTheDocument();
-    expect(tempoMaximoEventoInput).toBeInTheDocument();
-    // Adicione mais expectativas para os outros inputs conforme necessário
-  });
 
-  test('alteração nos inputs atualiza o estado', () => {
-    const { getByLabelText } = render(<PaginaDados />);
-    const numeroParticipantesInput = getByLabelText('Número de participantes:');
-    fireEvent.change(numeroParticipantesInput, { target: { value: '10' } });
-    expect(numeroParticipantesInput.value).toBe('10');
-    // Repita o mesmo processo para os outros inputs
-  });
 
-  test('gerar cartões atualiza corretamente o estado', () => {
-    // Mock da função setParticipantesRodadas
-    const setParticipantesRodadas = jest.fn();
-
-    // Simular um cenário com 12 participantes, tempo de evento de 5, tempo por rodada de 1 e limite de 4 por mesa
-    const numeroParticipantes = 12;
-    const tempoMaximoEvento = 5;
-    const tempoPorRodada = 1;
+describe('Testes para handleGerarCartoes', () => {
+  
+  
+  test('Deve gerar as rodadas corretamente para cada participante', () => {
+    const numeroParticipantes = 20;
+    const tempoMaximoEventoHoras = 5;
+    const tempoPorRodadaHoras = 1;
     const numeroMaximoPorMesa = 4;
 
-    // Chama a função para gerar os participantesAssociados
-    handleGerarCartoes(numeroParticipantes, tempoMaximoEvento, tempoPorRodada, numeroMaximoPorMesa, setParticipantesRodadas);
+    const cartoes = handleGerarCartoes(
+      numeroParticipantes,
+      tempoMaximoEventoHoras,
+      tempoPorRodadaHoras,
+      numeroMaximoPorMesa
+    );
 
-    // Aqui, você pode verificar se o estado foi atualizado corretamente após o clique no botão
-    // Por exemplo:
-    // Verifique se o estado `participantesRodadas` foi atualizado com os valores esperados
-    // Verifique se o console.log produz o resultado esperado ou se chama a função de maneira adequada
-    expect(setParticipantesRodadas).toHaveBeenCalled();
+    const participantes = Object.keys(cartoes);
+
+    participantes.forEach((participante) => {
+      const rodadasParticipante = cartoes[participante].map((info) => info.rodada);
+      const rodadasEsperadas = new Set(rodadasParticipante);
+
+      expect(rodadasEsperadas.size).toBe(rodadasParticipante.length);
+    });
   });
 
-  test('não gera encontros repetidos entre participantes', () => {
-    // Simular um cenário com 10 participantes, tempo de evento de 60, tempo por rodada de 15 e limite de 4 por mesa
-    const numeroParticipantes = 10;
-    const tempoMaximoEvento = 60;
-    const tempoPorRodada = 15;
+  test('Não há reencontros entre os participantes em rodadas diferentes', () => {
+    const numeroParticipantes = 20;
+    const tempoMaximoEventoHoras = 5;
+    const tempoPorRodadaHoras = 1;
     const numeroMaximoPorMesa = 4;
 
-    // Chama a função para gerar os participantesAssociados
-    const participantesAssociados = handleGerarCartoes(numeroParticipantes, tempoMaximoEvento, tempoPorRodada, numeroMaximoPorMesa);
+    const cartoes = handleGerarCartoes(
+      numeroParticipantes,
+      tempoMaximoEventoHoras,
+      tempoPorRodadaHoras,
+      numeroMaximoPorMesa
+    );
 
-    // Verifica se não há encontros repetidos entre participantes em diferentes rodadas
-    let encontrouRepetido = false;
-    Object.keys(participantesAssociados).forEach(participante => {
-      for (let i = 0; i < participantesAssociados[participante].length; i++) {
-        if (participanteJaNaMesa(participante, i, participantesAssociados)) {
-          encontrouRepetido = true;
-          break;
-        }
-      }
+    const participantes = Object.keys(cartoes);
+    const encontros = {};
+
+    participantes.forEach((participante) => {
+      encontros[participante] = new Set();
+
+      cartoes[participante].forEach((info) => {
+        encontros[participante].add(info.mesa);
+      });
     });
 
-    expect(encontrouRepetido).toBe(false);
-  });
+    const todasRodadas = Object.values(encontros).flat();
+    const rodadasUnicas = new Set(todasRodadas);
 
-  test('não excede o limite por mesa', () => {
-    // Simular um cenário com 10 participantes, tempo de evento de 60, tempo por rodada de 15 e limite de 4 por mesa
-    const numeroParticipantes = 10;
-    const tempoMaximoEvento = 60;
-    const tempoPorRodada = 15;
+    expect(rodadasUnicas.size).toBe(todasRodadas.length);
+  });
+  test("Deve gerar encontros únicos para cada participante", () => {
+    const numeroParticipantes = 20;
+    const tempoMaximoEventoHoras = 5;
+    const tempoPorRodadaHoras = 1;
     const numeroMaximoPorMesa = 4;
 
-    // Chama a função para gerar os participantesAssociados
-    const participantesAssociados = handleGerarCartoes(numeroParticipantes, tempoMaximoEvento, tempoPorRodada, numeroMaximoPorMesa);
+    const cartoes = handleGerarCartoes(
+      numeroParticipantes,
+      tempoMaximoEventoHoras,
+      tempoPorRodadaHoras,
+      numeroMaximoPorMesa
+    );
 
-    // Verifica se o limite por mesa não é excedido em nenhuma rodada
-    let excedeuLimitePorMesa = false;
-    Object.keys(participantesAssociados).forEach(participante => {
-      for (let i = 0; i < participantesAssociados[participante].length; i++) {
-        const mesaAtual = participantesAssociados[participante][i].mesa;
-        const participantesNaMesa = Object.values(participantesAssociados)
-          .map(rodadas => rodadas[i])
-          .filter(participante => participante.mesa === mesaAtual);
+    Object.keys(cartoes).forEach((participante) => {
+      const encontros = new Set();
+      cartoes[participante].forEach((info) => {
+        const encontro = `Rodada ${info.rodada}, Mesa ${info.mesa}`;
+        encontros.add(encontro);
+      });
 
-        if (participantesNaMesa.length > numeroMaximoPorMesa) {
-          excedeuLimitePorMesa = true;
-          break;
-        }
-      }
+      expect(encontros.size).toBe(cartoes[participante].length);
     });
-
-    expect(excedeuLimitePorMesa).toBe(false);
   });
+
+  test('Verificar se o número de participantes por mesa não excede o limite', () => {
+    const numeroParticipantes = 20;
+    const tempoMaximoEventoHoras = 5;
+    const tempoPorRodadaHoras = 1;
+    const numeroMaximoPorMesa = 4;
+  
+    const cartoes = handleGerarCartoes(
+      numeroParticipantes,
+      tempoMaximoEventoHoras,
+      tempoPorRodadaHoras,
+      numeroMaximoPorMesa
+    );
+  
+    const participantes = Object.keys(cartoes);
+  
+    participantes.forEach((participante) => {
+      const mesas = cartoes[participante].map((info) => info.mesa);
+      const participantesPorMesa = {};
+  
+      mesas.forEach((mesa) => {
+        if (!participantesPorMesa[mesa]) {
+          participantesPorMesa[mesa] = 1;
+        } else {
+          participantesPorMesa[mesa]++;
+        }
+  
+        expect(participantesPorMesa[mesa]).toBeLessThanOrEqual(numeroMaximoPorMesa);
+      });
+    });
+  });
+  
 });

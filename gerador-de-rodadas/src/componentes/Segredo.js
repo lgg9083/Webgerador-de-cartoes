@@ -8,8 +8,8 @@ const PaginaSenha = () => {
     e.preventDefault();
     if (senha === segredoCorreto) {
       //Se a senha estiver correta, sera redirecionado para proxima pag
-      alert('Senha correta! Você pode acessar a próxima etapa.');
       
+      window.location.href = 'http://localhost:3000/dashboard';
     } else {
       alert('Senha incorreta! Tente novamente.');
       //Se a senha estiver incorreta, você pode exibir uma mensagem de erro ou limpar o campo de senha
