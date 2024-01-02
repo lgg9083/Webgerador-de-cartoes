@@ -1,26 +1,24 @@
-// router/index.js
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useState } from 'react';
 import PaginaSenha from '../componentes/Segredo';
-import CollectionPanel from '../componentes/Dashboard'
+import CollectionPanel from '../componentes/Dashboard';
 
-const AppRoutes = () => {
+const App = () => {
+  const [autenticado, setAutenticado] = useState(false);
+
+  const handleLogin = () => {
+    //se inserir a senha certa ira autenticar
+    setAutenticado(true);
+  };
+
   return (
-    <Routes>
-      <Route path="/" element={<PaginaSenha />} />
-      <Route path='/Dashboard' element={<CollectionPanel />}/>
-    </Routes>
+    <div>
+      {!autenticado ? (
+        <PaginaSenha onLogin={handleLogin} />
+      ) : (
+        <CollectionPanel />
+      )}
+    </div>
   );
 };
 
-const RoutesComponent = () => {
-  return (
-    <Router>
-      <AppRoutes />
-    </Router>
-  );
-};
-
-export default RoutesComponent;
-
-
+export default App;

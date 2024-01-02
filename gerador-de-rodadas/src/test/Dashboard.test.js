@@ -1,7 +1,6 @@
 import { handleGerarCartoes } from "../componentes/Dashboard";
 
 
-
 describe('Testes para handleGerarCartoes', () => {
   
   

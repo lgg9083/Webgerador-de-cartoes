@@ -37,14 +37,14 @@ export const handleGerarCartoes = (
       let participantesDisponiveis = [...participantes];
 
       while (participantesDisponiveis.length > 1) {
-        console.log(`    Iniciando nova iteração de participantes`);
+        console.log(`inniciando nova iteração de participantes`);
         const participanteA = participantesDisponiveis.shift();
-        console.log(`      Escolhendo para o participante A: ${participanteA}`);
+        console.log(`escolhendo para o participante A: ${participanteA}`);
 
         const grupo = [participanteA];
 
         while (grupo.length < numeroMaximoPorMesa && participantesDisponiveis.length > 0) {
-          console.log(`        Verificando confrontos para ${participanteA}`);
+          console.log(`verificando confrontos para ${participanteA}`);
           const possiveisConfrontos = participantesDisponiveis.filter(
             (p) =>
               !confrontosPorParticipante[participanteA].includes(p) &&
@@ -54,7 +54,7 @@ export const handleGerarCartoes = (
           );
 
           console.log(
-            `        Possíveis confrontos para ${participanteA}:`,
+            `possiveis confrontos para ${participanteA}:`,
             possiveisConfrontos
           );
 
@@ -107,7 +107,7 @@ export const handleGerarCartoes = (
       if (todosConcluidos) {
         rodadaConcluida = true;
       } else {
-        console.log(`    Rodada ${rodada} incompleta, reorganizando participantes...`);
+        console.log(`Rodada ${rodada} incompleta, reorganizando participantes...`);
       }
     }
   }

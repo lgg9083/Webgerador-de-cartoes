@@ -1,21 +1,29 @@
 import React, { useState } from 'react';
+import PaginaDados from './Dashboard'; // Importe o componente que deseja renderizar
 
 const PaginaSenha = () => {
   const [senha, setSenha] = useState('');
-  const segredoCorreto = 'batatinhafrita'; //  segredo que definido
+  const [autenticado, setAutenticado] = useState(false);
+  const segredoCorreto = 'batatinhafrita'; // segredo definido
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (senha === segredoCorreto) {
-      //Se a senha estiver correta, sera redirecionado para proxima pag
+      //se a senha estiver correta, atualize o estado para autenticado
+      setAutenticado(true);
       
-      window.location.href = 'http://localhost:3000/dashboard';
+      setSenha('');
     } else {
       alert('Senha incorreta! Tente novamente.');
-      //Se a senha estiver incorreta, você pode exibir uma mensagem de erro ou limpar o campo de senha
+      //se a senha não estiver correta exibira essa 
       setSenha('');
     }
   };
+
+  // Renderize o componente PaginaDados se estiver autenticado
+  if (autenticado) {
+    return <PaginaDados />;
+  }
 
   return (
     <div>
