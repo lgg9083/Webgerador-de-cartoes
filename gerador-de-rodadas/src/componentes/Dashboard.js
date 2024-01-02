@@ -5,10 +5,10 @@ export const handleGerarCartoes = (
   tempoMaximoEventoHoras,
   tempoPorRodadaHoras,
   numeroMaximoPorMesa
-) => {
+) => { 
   const rodadasPossiveis = Math.floor(tempoMaximoEventoHoras / tempoPorRodadaHoras);
   let participantes = Array.from({ length: numeroParticipantes }, (_, index) => index + 1);
-  participantes.sort(() => Math.random() - 0.5); // Embaralha a ordem dos participantes
+  participantes.sort(() => Math.random() - 0.5);
   const cartoesPorParticipante = {};
   const mesasDisponiveis = Array.from(
     { length: Math.ceil(numeroParticipantes / numeroMaximoPorMesa) },
@@ -21,9 +21,11 @@ export const handleGerarCartoes = (
   });
 
   for (let rodada = 1; rodada <= rodadasPossiveis; rodada++) {
+    console.log(`Iniciando Rodada ${rodada}`);
     let rodadaConcluida = false;
 
     while (!rodadaConcluida) {
+      console.log(`  Iniciando nova iteração para a Rodada ${rodada}`);
       const confrontosRodada = [];
       const confrontosPorParticipante = {};
       participantes.forEach((participante) => {
@@ -35,12 +37,14 @@ export const handleGerarCartoes = (
       let participantesDisponiveis = [...participantes];
 
       while (participantesDisponiveis.length > 1) {
+        console.log(`    Iniciando nova iteração de participantes`);
         const participanteA = participantesDisponiveis.shift();
-        console.log(`Rodada ${rodada} - Escolhendo para o participante A: ${participanteA}`);
+        console.log(`      Escolhendo para o participante A: ${participanteA}`);
 
         const grupo = [participanteA];
 
         while (grupo.length < numeroMaximoPorMesa && participantesDisponiveis.length > 0) {
+          console.log(`        Verificando confrontos para ${participanteA}`);
           const possiveisConfrontos = participantesDisponiveis.filter(
             (p) =>
               !confrontosPorParticipante[participanteA].includes(p) &&
@@ -50,7 +54,7 @@ export const handleGerarCartoes = (
           );
 
           console.log(
-            `Rodada ${rodada} - Possíveis confrontos para ${participanteA}:`,
+            `        Possíveis confrontos para ${participanteA}:`,
             possiveisConfrontos
           );
 
@@ -84,11 +88,26 @@ export const handleGerarCartoes = (
         }
       }
 
-      if (participantesDisponiveis.length === 0) {
+      const participantesAusentes = participantes.filter(participante => {
+        return cartoesPorParticipante[participante].length !== rodada;
+      });
+
+      participantesAusentes.forEach(participante => {
+        let mesaAleatoria = mesasDisponiveis[Math.floor(Math.random() * mesasDisponiveis.length)];
+        while (cartoesPorParticipante[participante].some(info => info.mesa === mesaAleatoria)) {
+          mesaAleatoria = mesasDisponiveis[Math.floor(Math.random() * mesasDisponiveis.length)];
+        }
+        cartoesPorParticipante[participante].push({ rodada, mesa: mesaAleatoria });
+      });
+
+      const todosConcluidos = participantes.every(participante => {
+        return cartoesPorParticipante[participante].length === rodada;
+      });
+
+      if (todosConcluidos) {
         rodadaConcluida = true;
       } else {
-        console.log(`Rodada ${rodada} incompleta, reiniciando...`);
-        break;
+        console.log(`    Rodada ${rodada} incompleta, reorganizando participantes...`);
       }
     }
   }
@@ -116,7 +135,15 @@ const PaginaDados = () => {
       alert("Por favor, preencha todos os campos.");
       return;
     }
-
+    if (tempoPorRodadaHoras > tempoMaximoEventoHoras) {
+      alert("O tempo por rodada não pode ser maior que o tempo total do evento. Por favor, insira os dados novamente.");
+      // Resetar os campos
+      setNumeroParticipantes("");
+      setTempoMaximoEventoHoras("");
+      setTempoPorRodadaHoras("");
+      setNumeroMaximoPorMesa("");
+      return;
+    }
     const cartoes = handleGerarCartoes(
       Number(numeroParticipantes),
       Number(tempoMaximoEventoHoras),
