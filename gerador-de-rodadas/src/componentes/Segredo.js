@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import PaginaDados from './Dashboard'; // Importe o componente que deseja renderizar
+import PaginaDados from './Dashboard'; 
 
 const PaginaSenha = () => {
   const [senha, setSenha] = useState('');
   const [autenticado, setAutenticado] = useState(false);
-  const segredoCorreto = 'batatinhafrita'; // segredo definido
+  const segredoCorreto = 'batatinhafrita'; //segredo definido deverá ser mudado
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -20,7 +20,7 @@ const PaginaSenha = () => {
     }
   };
 
-  // Renderize o componente PaginaDados se estiver autenticado
+  
   if (autenticado) {
     return <PaginaDados />;
   }
