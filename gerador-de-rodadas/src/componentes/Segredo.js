@@ -4,7 +4,7 @@ import PaginaDados from './Dashboard';
 const PaginaSenha = () => {
   const [senha, setSenha] = useState('');
   const [autenticado, setAutenticado] = useState(false);
-  const segredoCorreto = 'batatinhafrita'; //segredo definido deverá ser mudado
+  const segredoCorreto = 'ba'; //segredo definido deverá ser mudado
 
   const handleSubmit = (e) => {
     e.preventDefault();
