@@ -12,7 +12,7 @@ const App = () => {
 
   return (
     <div>
-      {!autenticado ? (
+      {!autenticado && false ? (
         <PaginaSenha onLogin={handleLogin} />
       ) : (
         <CollectionPanel />
